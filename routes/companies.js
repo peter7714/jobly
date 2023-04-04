@@ -59,7 +59,7 @@ router.get("/", async function (req, res, next) {
     }
     const { name, minEmployees, maxEmployees } = req.query;
     if(minEmployees > maxEmployees) {
-      throw new BadRequestError('Invalid request', 400);
+      throw new BadRequestError('Invalid request',400);
     }
     const companiesQuery = await db.query(
       `SELECT name,
