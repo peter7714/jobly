@@ -52,22 +52,18 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
  */
 
 router.get("/", async function (req, res, next) {
+  const query = req.query;
+  if(query.minEmployees !== undefined) query.minEmployees = +query.minEmployees;
+  if(query.maxEmployees !== undefined) query.maxEmployees = +query.maxEmployees;
+
   try {
-    if(!req.query){
-      const companies = await Company.findAll();
-      return res.json({ companies });
-    }
-    const { name, minEmployees, maxEmployees } = req.query;
-    if(minEmployees > maxEmployees) {
-      throw new BadRequestError('Invalid request',400);
+    const validator = jsonschema.validate(q, companySearchSchema);
+    if (!validator.valid) {
+      const errs = validator.errors.map(e => e.stack);
+      throw new BadRequestError(errs);
     }
 
-    const companiesQuery = await db.query(
-      `SELECT name,
-              min_eployees,
-              max_employees,
-          FROM companies
-          WHERE name=$1, minEmployees=$2, maxEmployees=$3`, [name, minEmployees, maxEmployees]);
+    const companiesQuery = await Company.findAll(query);
     return res.json({companiesQuery});
   } catch (err) {
     return next(err);
